@@ -18,7 +18,7 @@ services:
       - db
     volumes:
       - static:/backend_static
-      - media:/var/www/kittygram/media
+      - media:/var/www/foodgram/media
   frontend:
     image: alexeont/foodgram_frontend
     env_file: .env
@@ -35,4 +35,4 @@ services:
       - 9000:80
     volumes:
       - static:/static
-      - media:/var/www/kittygram/media
+      - media:/var/www/foodgram/media
