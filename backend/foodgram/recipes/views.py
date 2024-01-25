@@ -90,7 +90,7 @@ class RecipeViewSet(ModelViewSet):
             name = ingredient.name.capitalize()
             measure = ingredient.measurement_unit
             final += model_str.format(name, measure, result_dict[id])
-        final.encode(encoding='UTF-8',errors='replace')
+        final.encode(encoding='UTF-8', errors='replace')
         response = HttpResponse(content_type='application/pdf')
         response['Content-Disposition'] = 'attachment;\
                                            filename=список_покупок.pdf'
