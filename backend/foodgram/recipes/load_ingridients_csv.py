@@ -7,7 +7,7 @@ from recipes.models import Ingredient
 
 def import_ingredients():
     try:
-        with open(f'{Path(BASE_DIR.parent.parent)}/data/ingredients.csv',
+        with open(f'ingredients.csv',
                   encoding='utf-8') as db_ingredients:
             reader = csv.reader(db_ingredients)
             for row in reader:
