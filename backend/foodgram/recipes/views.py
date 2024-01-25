@@ -95,6 +95,7 @@ class RecipeViewSet(ModelViewSet):
                                            filename=список_покупок.pdf'
 
         file = canvas.Canvas(response)
+        file.drawString(100, 100, final)
         file.showPage()
         file.save()
         return response
