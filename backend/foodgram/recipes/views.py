@@ -4,6 +4,7 @@ from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.viewsets import ModelViewSet
+from reportlab.pdfgen import canvas
 
 from .models import (Tag,
                      Recipe,
@@ -89,4 +90,11 @@ class RecipeViewSet(ModelViewSet):
             name = ingredient.name.capitalize()
             measure = ingredient.measurement_unit
             final += model_str.format(name, measure, result_dict[id])
-        return HttpResponse(final, content_type='application/pdf')
+        response = HttpResponse(mimetype='application/pdf')
+        response['Content-Disposition'] = 'attachment;\
+                                           filename=список_покупок.pdf'
+
+        file = canvas.Canvas(response)
+        file.showPage()
+        file.save()
+        return response
