@@ -1,7 +1,5 @@
 import csv
-from pathlib import Path
 
-from foodgram.settings import BASE_DIR
 from recipes.models import Ingredient
 
 
