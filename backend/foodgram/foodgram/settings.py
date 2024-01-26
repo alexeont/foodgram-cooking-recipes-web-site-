@@ -119,8 +119,6 @@ DJOSER = {
     'PERMISSIONS': {'user': ['foodgram.permissions.CustomUserDjoserPermission'],
                     'user_list': ['rest_framework.permissions.AllowAny'],
                     'activation': ['foodgram.permissions.NotInBlackListPermission']}
-
-    # 'CONSTANTS': {'messages': 'myapp.constants.CustomMessages'}
 }
 
 REST_FRAMEWORK = {
@@ -145,7 +143,6 @@ STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'collected_static'
 
 MEDIA_URL = '/media/'
-# MEDIA_ROOT = BASE_DIR / 'media'
 MEDIA_ROOT = '/var/www/foodgram/media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
