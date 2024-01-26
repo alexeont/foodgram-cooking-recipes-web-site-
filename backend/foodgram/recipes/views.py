@@ -1,10 +1,16 @@
+import io
+from django.http import FileResponse
 from django_filters.rest_framework import DjangoFilterBackend
-from django.http import HttpResponse
 from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.viewsets import ModelViewSet
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
+from reportlab.platypus import Paragraph
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.styles import ParagraphStyle
 
 from .models import (Tag,
                      Recipe,
@@ -82,21 +88,31 @@ class RecipeViewSet(ModelViewSet):
             else:
                 result_dict[id] += amount
 
-        final = ''
-        model_str = '{} ({}) — {}\n'
+        to_buy_list = ''
+        model_str = '{} ({}) — {}<br/>'
 
         for id in result_dict:
             ingredient = Ingredient.objects.get(id=id)
             name = ingredient.name.capitalize()
             measure = ingredient.measurement_unit
-            final += model_str.format(name, measure, result_dict[id])
-        final.encode(encoding='ascii', errors='replace')
-        response = HttpResponse(content_type='application/pdf')
-        response['Content-Disposition'] = 'attachment;\
-                                           filename=список_покупок.pdf'
+            to_buy_list += model_str.format(name, measure, result_dict[id])
 
-        file = canvas.Canvas(response)
-        file.drawString(100, 100, final)
-        file.showPage()
+        buffer = io.BytesIO()
+        file = canvas.Canvas(buffer)
+        pdfmetrics.registerFont(TTFont('DejaVuSerif', 'DejaVuSerif.ttf'))
+        width, height = A4
+        my_style = ParagraphStyle('my_style',
+                                  fontName='DejaVuSerif',
+                                  fontSize=14)
+        file.setFont('DejaVuSerif', 16)
+        file.drawString(100, height - 100, 'Список покупок:')
+
+        p1 = Paragraph(to_buy_list, my_style)
+        p1.wrapOn(file, 300, 50)
+        p1.drawOn(file, width - 450, height - 150)
+
         file.save()
-        return response
+        buffer.seek(0)
+        return FileResponse(buffer,
+                            as_attachment=True,
+                            filename='список_покупок.pdf')
