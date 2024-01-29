@@ -140,8 +140,8 @@ class ShoppingCart(CartFavoritesModel):
         ]
 
     def __str__(self):
-        return (f"{self.consumer[:TRUNCATED_MODEL_NAME]} добавил "
-                f"{self.recipe[:TRUNCATED_MODEL_NAME]} в корзину")
+        return (f"{self.consumer.username[:TRUNCATED_MODEL_NAME]} добавил "
+                f"{self.recipe.name[:TRUNCATED_MODEL_NAME]} в корзину")
 
 
 class Favorites(CartFavoritesModel):
