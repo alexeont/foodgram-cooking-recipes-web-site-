@@ -31,8 +31,19 @@ class IngredientSerializer(serializers.ModelSerializer):
         model = Ingredient
 
 
+class CustomImageField(Base64ImageField):
+
+    # Пришлось переопределить, см. Recipe.
+
+    def to_internal_value(self, base64_data):
+        if base64_data in self.EMPTY_VALUES:
+            self.fail('empty')
+        return super().to_internal_value(base64_data)
+
+
 class RecipeIngredientSerializer(serializers.ModelSerializer):
     """ Для создания ингредиента в рецепте. """
+
     id = serializers.PrimaryKeyRelatedField(source='ingredient__id',
                                             queryset=Ingredient.objects.all())
     amount = serializers.IntegerField(min_value=MIN_AMOUNT_FOR_INGREDIENT,
@@ -45,6 +56,7 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
 
 class RecipeIngredientGetSerializer(serializers.ModelSerializer):
     """ Для отображения ингредиента в рецепте. """
+
     id = serializers.ReadOnlyField(
         source='ingredient.id'
     )
@@ -108,9 +120,8 @@ class RecipePostSerializer(serializers.ModelSerializer):
     tags = serializers.PrimaryKeyRelatedField(many=True,
                                               queryset=Tag.objects.all())
     author = UserSerializer(default=serializers.CurrentUserDefault())
-    image = Base64ImageField(allow_null=False,
-                             allow_empty_file=False)
-    # не понял, почему пустое значение все равно принимается
+    image = CustomImageField()
+    # без переопределения не срабатывали allow_null и allow_empty_file.
     cooking_time = serializers.IntegerField(min_value=MIN_COOKING_TIME,
                                             max_value=MAX_COOKING_TIME)
 

@@ -30,7 +30,7 @@ from .serializers import (IngredientSerializer,
                           RecipeGetSerializer,
                           FavoritesSerializer,
                           ShoppingCartSerializer)
-from foodgram.constants import NONEXISTENT_CART_FAV_ITEM
+from foodgram.constants import NONEXISTENT_CART_FAV_ITEM, NO_RECIPE
 from foodgram.permissions import IsAuthorOrReadOnly
 
 
@@ -75,7 +75,15 @@ class RecipeViewSet(ModelViewSet):
             'recipe': pk,
             'user': request.user.id
         }
-        recipe = get_object_or_404(Recipe, id=pk)
+        try:
+            recipe = Recipe.objects.get(id=pk)
+        except Recipe.DoesNotExist:
+            return Response(NO_RECIPE,
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        # без try/except не получается отдать 400 ошибку вместо 404.
+        # Если объект не получать в сериализаторе, как ты говорил, то
+        # его придется получать здесь
 
         serializer = serializer(data, context={'recipe': recipe})
         serializer.validate(data)

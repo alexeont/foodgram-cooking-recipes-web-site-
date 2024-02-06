@@ -39,4 +39,4 @@ class UserAdmin(BaseUserAdmin):
 
     @admin.display(description='Подписчиков:')
     def subs_count(self, obj):
-        return obj.sub_target_subscriber.count()
+        return obj.subs_author.count()

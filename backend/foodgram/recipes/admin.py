@@ -1,7 +1,15 @@
 from django.contrib import admin
 from django.utils.safestring import mark_safe
 
-from .models import Tag, Ingredient, Recipe, RecipeIngredient
+from .models import (
+    Tag,
+    Ingredient,
+    Recipe,
+    RecipeIngredient,
+    Favorites,
+    ShoppingCart,
+    Subscription
+)
 
 
 class IngredientInline(admin.TabularInline):
@@ -35,3 +43,13 @@ class IngredientAdmin(admin.ModelAdmin):
     list_display = ('name', 'measurement_unit')
     search_fields = ('name',)
     list_per_page = 30
+
+
+@admin.register(Favorites, ShoppingCart)
+class FavoritesCartAdmin(admin.ModelAdmin):
+    search_fields = ('consumer', 'recipe')
+
+
+@admin.register(Subscription)
+class SubscriptionAdmin(admin.ModelAdmin):
+    search_fields = ('subscriber', 'author')

@@ -109,7 +109,7 @@ class Recipe(NameModel):
                                          through='RecipeIngredient')
     image = models.ImageField(
         'картинка',
-        upload_to='recipes/',
+        upload_to='recipes/'
     )
     text = models.TextField('текст рецепта')
     cooking_time = models.PositiveSmallIntegerField(
@@ -158,9 +158,12 @@ class Subscription(models.Model):
                 check=~models.Q(subscriber=models.F('author')),
             ),
         ]
+        verbose_name = 'подписка'
+        verbose_name_plural = 'Подписки'
 
     def __str__(self):
-        return f'{self.subscriber} подписан на {self.author}'
+        return (f'{self.subscriber.get_full_name()} подписан на '
+                f'{self.author.get_full_name()}')
 
 
 class ShoppingCart(CartFavoritesModel):
@@ -174,10 +177,14 @@ class ShoppingCart(CartFavoritesModel):
                 name='unique_cart'
             ),
         )
+        verbose_name = 'корзина'
+        verbose_name_plural = 'корзины'
 
     def __str__(self):
-        return (f'{self.consumer.username[:TRUNCATED_MODEL_NAME]} добавил '
-                f'{self.recipe.name[:TRUNCATED_MODEL_NAME]} в корзину')
+        return (
+            f'{self.consumer.get_full_name()} '
+            f'добавил {self.recipe.name[:TRUNCATED_MODEL_NAME]} в корзину'
+        )
 
 
 class Favorites(CartFavoritesModel):
@@ -191,9 +198,11 @@ class Favorites(CartFavoritesModel):
                 name='unique_favorite'
             ),
         )
+        verbose_name = 'избранное'
+        verbose_name_plural = 'избранное'
 
     def __str__(self):
-        return (f'{self.consumer.username[:TRUNCATED_MODEL_NAME]} добавил '
+        return (f'{self.consumer.get_full_name()} добавил '
                 f'{self.recipe.name[:TRUNCATED_MODEL_NAME]} в избранное')
 
 
