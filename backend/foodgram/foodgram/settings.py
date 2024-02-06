@@ -10,7 +10,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.getenv('SECRET_KEY')
 
-DEBUG = os.getenv('DEBUG') or False
+DEBUG = os.getenv('DEBUG', False) == 'True'
 
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS').split(', ')
 
@@ -62,7 +62,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'foodgram.wsgi.application'
 
-if DEBUG:
+if os.getenv('USE_SQLITE', False) == 'True':
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
@@ -112,13 +112,12 @@ USE_TZ = True
 
 DJOSER = {
     'LOGIN_FIELD': 'email',
-    'SERIALIZERS': {'user': 'users.serializers.CustomUserSerializer',
-                    'user_create': 'users.serializers.CustomUserCreateSerializer',
-                    'current_user': 'users.serializers.CustomUserSerializer'},
+    'SERIALIZERS': {'user': 'users.serializers.UserSerializer',
+                    'current_user': 'users.serializers.UserSerializer'},
     'HIDE_USERS': False,
-    'PERMISSIONS': {'user': ['foodgram.permissions.CustomUserDjoserPermission'],
-                    'user_list': ['rest_framework.permissions.AllowAny'],
-                    'activation': ['foodgram.permissions.NotInBlackListPermission']}
+    'PERMISSIONS': {
+        'user': ['rest_framework.permissions.AllowAny'],
+        'user_list': ['rest_framework.permissions.AllowAny']}
 }
 
 REST_FRAMEWORK = {
@@ -130,7 +129,7 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_PAGINATION_CLASS':
     'foodgram.pagination.CustomLimitPagination',
-    'PAGE_SIZE': 7,
+    'PAGE_SIZE': 6,
     'SEARCH_PARAM': 'name',
 }
 

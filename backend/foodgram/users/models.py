@@ -8,6 +8,7 @@ from .validators import validator_username
 
 class User(AbstractUser):
     """ Класс пользователей. """
+
     username = models.CharField(
         'Логин',
         max_length=MAX_NAME_PASSWORD_CHARACTERS,
@@ -25,10 +26,11 @@ class User(AbstractUser):
                                   max_length=MAX_NAME_PASSWORD_CHARACTERS)
     last_name = models.CharField('Фамилия',
                                  max_length=MAX_NAME_PASSWORD_CHARACTERS)
-    password = models.CharField('Пароль',
-                                max_length=MAX_NAME_PASSWORD_CHARACTERS)
-    is_in_black_list = models.BooleanField('В черном списке',
-                                           default=False)
+
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ('first_name',
+                       'last_name',
+                       'username')
 
     class Meta:
         ordering = ('username',)

@@ -1,15 +1,25 @@
 # Models:
 MAX_NAME_AND_SLUG_FIELD = 200
 TRUNCATED_MODEL_NAME = 10
+COLOR_SYMBOLS_COUNT = 7
 MAX_NAME_INGREDIENTS = 100
-VALIDATE_COOKING_TIME_MSG = 'Время приготовления не может равняться нулю'
+# В ТЗ ограничения нет,
+# но CharFields требует max_length
+
+MIN_COOKING_TIME = 1
+MIN_COOKING_TIME_MSG = 'Время приготовления не может равняться нулю'
+MAX_COOKING_TIME = 1440  # Сутки
+MAX_COOKING_TIME_MSG = 'Больше суток готовится только дипломный проект'
+
+MIN_AMOUNT_FOR_INGREDIENT = 1
+MIN_AMOUNT_ERROR_TEXT = 'Количество для ингредиента не может быть меньше 1'
+MAX_AMOUNT_FOR_INGREDIENT = 10000  # рандом
+MAX_AMOUNT_ERROR_TEXT = 'Количество для ингредиента не может быть больше 10000'
+
+INVALID_COLOR_FIELD_ERROR_TEXT = 'Цвет не соответствует hex-формату'
+
 
 # Serializers:
-MIN_AMOUNT_FOR_INGREDIENT = 1
-AMOUNT_ERROR_TEXT = 'Количество для ингредиента не может быть меньше 1.'
-
-COLOR_SYMBOLS_COUNT = 7
-INVALID_COLOR_FIELD_ERROR_TEXT = 'Цвет не соответствует hex-формату'
 NO_INGREDIENTS_TEXT = 'Добавьте ингредиенты'
 NO_TAGS_TEXT = 'Добавьте тэг'
 NONEXISTENT_INGREDIENT_TEXT = 'Нет такого ингредиента'

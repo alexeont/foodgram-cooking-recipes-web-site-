@@ -1,15 +1,22 @@
-from django.contrib.auth import get_user_model
-from django.core.validators import MinValueValidator
+from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 
-from foodgram.constants import (COLOR_SYMBOLS_COUNT,
-                                MAX_NAME_AND_SLUG_FIELD,
-                                TRUNCATED_MODEL_NAME,
-                                MAX_NAME_INGREDIENTS,
-                                MIN_AMOUNT_FOR_INGREDIENT,
-                                VALIDATE_COOKING_TIME_MSG)
-
-User = get_user_model()
+from .validators import validate_color
+from foodgram.constants import (
+    MAX_NAME_AND_SLUG_FIELD,
+    TRUNCATED_MODEL_NAME,
+    MIN_COOKING_TIME,
+    MIN_COOKING_TIME_MSG,
+    MAX_COOKING_TIME,
+    MAX_COOKING_TIME_MSG,
+    MIN_AMOUNT_FOR_INGREDIENT,
+    MIN_AMOUNT_ERROR_TEXT,
+    MAX_AMOUNT_FOR_INGREDIENT,
+    MAX_AMOUNT_ERROR_TEXT,
+    MAX_NAME_INGREDIENTS,
+    COLOR_SYMBOLS_COUNT,
+)
+from users.models import User
 
 
 class NameModel(models.Model):
@@ -28,12 +35,15 @@ class NameModel(models.Model):
 
 class CartFavoritesModel(models.Model):
     """ Базовая модель для корзины и избранного. """
+
     consumer = models.ForeignKey(
         User,
+        verbose_name='пользователь',
         on_delete=models.CASCADE
     )
     recipe = models.ForeignKey(
         'Recipe',
+        verbose_name='рецепт',
         on_delete=models.CASCADE
     )
 
@@ -43,9 +53,11 @@ class CartFavoritesModel(models.Model):
 
 class Tag(NameModel):
     """ Тег. """
+
     color = models.CharField(
         'цвет',
         unique=True,
+        validators=(validate_color,),
         max_length=COLOR_SYMBOLS_COUNT
     )
     slug = models.SlugField(
@@ -55,22 +67,29 @@ class Tag(NameModel):
     )
 
     class Meta:
-        default_related_name = 'tags'
         verbose_name = 'тэг'
         verbose_name_plural = 'Тэги'
 
 
 class Ingredient(models.Model):
     """ Ингредиент. """
+
     name = models.CharField('название',
                             max_length=MAX_NAME_AND_SLUG_FIELD)
+    # Поле name нельзя брать из абстрактного класса, потому что там оно
+    # уникальное, а в базе ингредиентов есть повторяющиеся
     measurement_unit = models.CharField('Мера измерения',
                                         max_length=MAX_NAME_INGREDIENTS)
 
     class Meta:
-        default_related_name = 'ingredients'
         verbose_name = 'ингредиент'
         verbose_name_plural = 'Ингредиенты'
+        constraints = [
+            models.UniqueConstraint(
+                fields=('name', 'measurement_unit'),
+                name='unique_ingredient_measure'
+            )
+        ]
 
     def __str__(self):
         return self.name[:TRUNCATED_MODEL_NAME]
@@ -78,6 +97,7 @@ class Ingredient(models.Model):
 
 class Recipe(NameModel):
     """ Рецепт. """
+
     tags = models.ManyToManyField(Tag, verbose_name='тэги')
     author = models.ForeignKey(
         User,
@@ -86,8 +106,7 @@ class Recipe(NameModel):
     )
     ingredients = models.ManyToManyField(Ingredient,
                                          verbose_name='ингредиенты',
-                                         through='RecipeIngredient',
-                                         max_length=MAX_NAME_INGREDIENTS)
+                                         through='RecipeIngredient')
     image = models.ImageField(
         'картинка',
         upload_to='recipes/',
@@ -95,36 +114,53 @@ class Recipe(NameModel):
     text = models.TextField('текст рецепта')
     cooking_time = models.PositiveSmallIntegerField(
         'время приготовления',
-        validators=(MinValueValidator(MIN_AMOUNT_FOR_INGREDIENT,
-                                      message=VALIDATE_COOKING_TIME_MSG),)
+        validators=(
+            MinValueValidator(
+                MIN_COOKING_TIME,
+                message=MIN_COOKING_TIME_MSG
+            ),
+            MaxValueValidator(
+                MAX_COOKING_TIME,
+                message=MAX_COOKING_TIME_MSG
+            )
+        )
     )
+    pub_date = models.DateTimeField('Дата публикации',
+                                    auto_now_add=True)
 
     class Meta:
-        default_related_name = 'recipes_model'
-        ordering = ('-id',)
+        default_related_name = 'recipes'
+        ordering = ('-pub_date',)
         verbose_name = 'рецепт'
         verbose_name_plural = 'Рецепты'
 
 
 class Subscription(models.Model):
     """ Подписка. """
+
     subscriber = models.ForeignKey(User,
+                                   verbose_name='подписчик',
                                    on_delete=models.CASCADE,
                                    related_name='subs_subscriber')
-    sub_target = models.ForeignKey(User,
-                                   on_delete=models.CASCADE,
-                                   related_name='sub_target_subscriber')
+    author = models.ForeignKey(User,
+                               verbose_name='автор',
+                               on_delete=models.CASCADE,
+                               related_name='subs_author')
 
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=['subscriber', 'sub_target'],
+                fields=('subscriber', 'author'),
                 name='unique_subscription'
-            )
+            ),
+            models.CheckConstraint(
+                name='%(app_label)s_%(class)s_prevent_self_follow',
+                check=~models.Q(subscriber=models.F('author')),
+            ),
         ]
 
     def __str__(self):
-        return f"{self.subscriber} is a sub of {self.sub_target}"
+        return f'{self.subscriber} подписан на {self.author}'
 
 
 class ShoppingCart(CartFavoritesModel):
@@ -132,16 +168,16 @@ class ShoppingCart(CartFavoritesModel):
 
     class Meta:
         default_related_name = 'cart_items'
-        constraints = [
+        constraints = (
             models.UniqueConstraint(
-                fields=['consumer', 'recipe'],
+                fields=('consumer', 'recipe'),
                 name='unique_cart'
-            )
-        ]
+            ),
+        )
 
     def __str__(self):
-        return (f"{self.consumer.username[:TRUNCATED_MODEL_NAME]} добавил "
-                f"{self.recipe.name[:TRUNCATED_MODEL_NAME]} в корзину")
+        return (f'{self.consumer.username[:TRUNCATED_MODEL_NAME]} добавил '
+                f'{self.recipe.name[:TRUNCATED_MODEL_NAME]} в корзину')
 
 
 class Favorites(CartFavoritesModel):
@@ -149,16 +185,16 @@ class Favorites(CartFavoritesModel):
 
     class Meta:
         default_related_name = 'favorites'
-        constraints = [
+        constraints = (
             models.UniqueConstraint(
-                fields=['consumer', 'recipe'],
+                fields=('consumer', 'recipe'),
                 name='unique_favorite'
-            )
-        ]
+            ),
+        )
 
     def __str__(self):
-        return (f"{self.consumer.username[:TRUNCATED_MODEL_NAME]} добавил "
-                f"{self.recipe.name[:TRUNCATED_MODEL_NAME]} в избранное")
+        return (f'{self.consumer.username[:TRUNCATED_MODEL_NAME]} добавил '
+                f'{self.recipe.name[:TRUNCATED_MODEL_NAME]} в избранное')
 
 
 """ Вспомогательные таблицы. """
@@ -166,12 +202,26 @@ class Favorites(CartFavoritesModel):
 
 class RecipeIngredient(models.Model):
     """ Связь рецепта с ингредиентом. """
+
     recipe = models.ForeignKey(Recipe,
+                               verbose_name='рецепт',
                                on_delete=models.CASCADE)
     ingredient = models.ForeignKey(Ingredient,
-                                   related_name='RIngredient',
+                                   verbose_name='ингредиент',
                                    on_delete=models.CASCADE)
-    amount = models.PositiveSmallIntegerField()
+    amount = models.PositiveSmallIntegerField(
+        'количество',
+        validators=(
+            MinValueValidator(
+                MIN_AMOUNT_FOR_INGREDIENT,
+                message=MIN_AMOUNT_ERROR_TEXT
+            ),
+            MaxValueValidator(
+                MAX_AMOUNT_FOR_INGREDIENT,
+                message=MAX_AMOUNT_ERROR_TEXT
+            )
+        )
+    )
 
     class Meta:
         default_related_name = 'recipeingredient'

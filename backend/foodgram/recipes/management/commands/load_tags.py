@@ -1,24 +1,23 @@
 import csv
-from pathlib import Path
+import sys
 
 from django.core.management.base import BaseCommand
 
-from foodgram.settings import BASE_DIR
 from recipes.models import Tag
 
 
 class Command(BaseCommand):
     def handle(self, *args, **options):
         try:
-            with open(f'{Path(BASE_DIR.parent.parent)}/data/tags.csv',
+            with open('recipes/data/tags.csv',
                       encoding='utf-8') as file:
                 reader = csv.reader(file)
-                for row in reader:
+                for name, color, slug in reader:
                     Tag.objects.get_or_create(
-                        name=row[0],
-                        color=row[1],
-                        slug=row[2]
+                        name=name,
+                        color=color,
+                        slug=slug
                     )
-            print('Загрузка данных завершена')
+            sys.stdout.write('Загрузка данных завершена')
         except Exception as e:
-            print(f'Ошибка при загрузке данных: {e}')
+            sys.stdout.write(f'Ошибка при загрузке данных: {e}')
