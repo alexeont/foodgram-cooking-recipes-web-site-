@@ -120,7 +120,7 @@ class RecipePostSerializer(serializers.ModelSerializer):
     tags = serializers.PrimaryKeyRelatedField(many=True,
                                               queryset=Tag.objects.all())
     author = UserSerializer(default=serializers.CurrentUserDefault())
-    image = CustomImageField()
+    image = CustomImageField(represent_in_base64=True)
     # без переопределения не срабатывали allow_null и allow_empty_file.
     cooking_time = serializers.IntegerField(min_value=MIN_COOKING_TIME,
                                             max_value=MAX_COOKING_TIME)
