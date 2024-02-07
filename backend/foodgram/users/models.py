@@ -9,6 +9,11 @@ from .validators import validator_username
 class User(AbstractUser):
     """ Класс пользователей. """
 
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ('first_name',
+                       'last_name',
+                       'username')
+
     username = models.CharField(
         'Логин',
         max_length=MAX_NAME_PASSWORD_CHARACTERS,
@@ -26,11 +31,6 @@ class User(AbstractUser):
                                   max_length=MAX_NAME_PASSWORD_CHARACTERS)
     last_name = models.CharField('Фамилия',
                                  max_length=MAX_NAME_PASSWORD_CHARACTERS)
-
-    USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ('first_name',
-                       'last_name',
-                       'username')
 
     class Meta:
         ordering = ('username',)

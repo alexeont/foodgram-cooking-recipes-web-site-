@@ -3,7 +3,7 @@ from django.db import models
 
 from .validators import validate_color
 from foodgram.constants import (
-    MAX_NAME_AND_SLUG_FIELD,
+    MAX_NAME_FIELD,
     TRUNCATED_MODEL_NAME,
     MIN_COOKING_TIME,
     MIN_COOKING_TIME_MSG,
@@ -13,7 +13,7 @@ from foodgram.constants import (
     MIN_AMOUNT_ERROR_TEXT,
     MAX_AMOUNT_FOR_INGREDIENT,
     MAX_AMOUNT_ERROR_TEXT,
-    MAX_NAME_INGREDIENTS,
+    MAX_MEASURE_UNIT,
     COLOR_SYMBOLS_COUNT,
 )
 from users.models import User
@@ -22,8 +22,7 @@ from users.models import User
 class NameModel(models.Model):
     """ Базовая модель с именем. """
 
-    name = models.CharField(max_length=MAX_NAME_AND_SLUG_FIELD,
-                            unique=True,
+    name = models.CharField(max_length=MAX_NAME_FIELD,
                             verbose_name='название')
 
     class Meta:
@@ -49,6 +48,16 @@ class CartFavoritesModel(models.Model):
 
     class Meta:
         abstract = True
+        constraints = (
+            models.UniqueConstraint(
+                fields=('consumer', 'recipe'),
+                name= '%(class)s prevent double add'
+            ),
+        )
+
+    def __str__(self):
+        return (f'{self.consumer} добавил рецепт {self.recipe.name}'
+                f'в {self._meta.verbose_name}')
 
 
 class Tag(NameModel):
@@ -62,7 +71,7 @@ class Tag(NameModel):
     )
     slug = models.SlugField(
         'слаг',
-        max_length=MAX_NAME_AND_SLUG_FIELD,
+        max_length=MAX_NAME_FIELD,
         unique=True
     )
 
@@ -71,25 +80,21 @@ class Tag(NameModel):
         verbose_name_plural = 'Тэги'
 
 
-class Ingredient(models.Model):
+class Ingredient(NameModel):
     """ Ингредиент. """
 
-    name = models.CharField('название',
-                            max_length=MAX_NAME_AND_SLUG_FIELD)
-    # Поле name нельзя брать из абстрактного класса, потому что там оно
-    # уникальное, а в базе ингредиентов есть повторяющиеся
     measurement_unit = models.CharField('Мера измерения',
-                                        max_length=MAX_NAME_INGREDIENTS)
+                                        max_length=MAX_MEASURE_UNIT)
 
     class Meta:
         verbose_name = 'ингредиент'
         verbose_name_plural = 'Ингредиенты'
-        constraints = [
+        constraints = (
             models.UniqueConstraint(
                 fields=('name', 'measurement_unit'),
                 name='unique_ingredient_measure'
-            )
-        ]
+            ),
+        )
 
     def __str__(self):
         return self.name[:TRUNCATED_MODEL_NAME]
@@ -148,7 +153,7 @@ class Subscription(models.Model):
                                related_name='subs_author')
 
     class Meta:
-        constraints = [
+        constraints = (
             models.UniqueConstraint(
                 fields=('subscriber', 'author'),
                 name='unique_subscription'
@@ -157,7 +162,7 @@ class Subscription(models.Model):
                 name='%(app_label)s_%(class)s_prevent_self_follow',
                 check=~models.Q(subscriber=models.F('author')),
             ),
-        ]
+        )
         verbose_name = 'подписка'
         verbose_name_plural = 'Подписки'
 
@@ -169,41 +174,19 @@ class Subscription(models.Model):
 class ShoppingCart(CartFavoritesModel):
     """ Корзина покупок. """
 
-    class Meta:
+    class Meta(CartFavoritesModel.Meta):
         default_related_name = 'cart_items'
-        constraints = (
-            models.UniqueConstraint(
-                fields=('consumer', 'recipe'),
-                name='unique_cart'
-            ),
-        )
         verbose_name = 'корзина'
         verbose_name_plural = 'корзины'
-
-    def __str__(self):
-        return (
-            f'{self.consumer.get_full_name()} '
-            f'добавил {self.recipe.name[:TRUNCATED_MODEL_NAME]} в корзину'
-        )
 
 
 class Favorites(CartFavoritesModel):
     """ Избранное. """
 
-    class Meta:
+    class Meta(CartFavoritesModel.Meta):
         default_related_name = 'favorites'
-        constraints = (
-            models.UniqueConstraint(
-                fields=('consumer', 'recipe'),
-                name='unique_favorite'
-            ),
-        )
         verbose_name = 'избранное'
         verbose_name_plural = 'избранное'
-
-    def __str__(self):
-        return (f'{self.consumer.get_full_name()} добавил '
-                f'{self.recipe.name[:TRUNCATED_MODEL_NAME]} в избранное')
 
 
 """ Вспомогательные таблицы. """
@@ -234,6 +217,8 @@ class RecipeIngredient(models.Model):
 
     class Meta:
         default_related_name = 'recipeingredient'
+        verbose_name = 'рецепт и ингредиент'
+        verbose_name_plural = 'рецепты и ингредиенты'
 
     def __str__(self):
         return (f'{self.recipe.name[:TRUNCATED_MODEL_NAME]} '

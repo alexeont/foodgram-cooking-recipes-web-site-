@@ -1,19 +1,17 @@
 # Models:
-MAX_NAME_AND_SLUG_FIELD = 200
+MAX_NAME_FIELD = 200
 TRUNCATED_MODEL_NAME = 10
 COLOR_SYMBOLS_COUNT = 7
-MAX_NAME_INGREDIENTS = 100
-# В ТЗ ограничения нет,
-# но CharFields требует max_length
+MAX_MEASURE_UNIT = 100
 
 MIN_COOKING_TIME = 1
 MIN_COOKING_TIME_MSG = 'Время приготовления не может равняться нулю'
-MAX_COOKING_TIME = 1440  # Сутки
+MAX_COOKING_TIME = 32767
 MAX_COOKING_TIME_MSG = 'Больше суток готовится только дипломный проект'
 
 MIN_AMOUNT_FOR_INGREDIENT = 1
 MIN_AMOUNT_ERROR_TEXT = 'Количество для ингредиента не может быть меньше 1'
-MAX_AMOUNT_FOR_INGREDIENT = 10000  # рандом
+MAX_AMOUNT_FOR_INGREDIENT = 32767
 MAX_AMOUNT_ERROR_TEXT = 'Количество для ингредиента не может быть больше 10000'
 
 INVALID_COLOR_FIELD_ERROR_TEXT = 'Цвет не соответствует hex-формату'
@@ -27,7 +25,6 @@ TAGS_DUPLICATE = 'Тэги не должны повторяться'
 INGREDIENTS_DUPLICATE = 'Ингредиенты не должны повторяться'
 
 # Views:
-DOUBLE_ADD = {'errors': 'Вы уже добавили этот рецепт'}
 NO_RECIPE = {'errors': 'Такого рецепта не существует'}
 NONEXISTENT_CART_FAV_ITEM = {'errors': 'Вы не добавляли этого рецепта'}
 

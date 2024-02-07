@@ -8,8 +8,7 @@ class RecipeFilter(FilterSet):
     is_favorited = filters.BooleanFilter(method='filter_favorited')
     is_in_shopping_cart = filters.BooleanFilter(method='filter_shopping_cart')
 
-    # Изменил на Boolean, теперь воспринимает только значения True/False,
-    # как исправить не нашел. Логичнее всего оставить как было, с ChoiceFilter.
+    # Изменил на Boolean, теперь воспринимает только значения True/False.
 
     class Meta:
         model = Recipe

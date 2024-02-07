@@ -14,14 +14,23 @@ from .models import (
 
 class IngredientInline(admin.TabularInline):
     model = RecipeIngredient
+    min_num = 1
 
 
 @admin.register(Recipe)
 class RecipeAdmin(admin.ModelAdmin):
-    list_display = ('get_image', 'name', 'author', 'favorited_count')
+    list_display = ('get_image',
+                    'name',
+                    'author',
+                    'favorited_count',
+                    'ingredient_string')
     search_fields = ('name', 'author', 'tags')
     readonly_fields = ('author', 'favorited_count')
     inlines = (IngredientInline,)
+
+    @admin.display(description='ингредиенты')
+    def ingredient_string(self, obj):
+        return ', '.join([i.name for i in obj.ingredients.all()])
 
     @admin.display(description='Добавлен пользовалями в избранное')
     def favorited_count(self, obj):

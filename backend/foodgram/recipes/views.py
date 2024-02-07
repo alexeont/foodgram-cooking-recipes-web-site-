@@ -2,7 +2,6 @@ import io
 
 from django.db.models import Sum
 from django.http import FileResponse
-from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status
 from rest_framework.decorators import action
@@ -30,7 +29,7 @@ from .serializers import (IngredientSerializer,
                           RecipeGetSerializer,
                           FavoritesSerializer,
                           ShoppingCartSerializer)
-from foodgram.constants import NONEXISTENT_CART_FAV_ITEM, NO_RECIPE
+from foodgram.constants import NONEXISTENT_CART_FAV_ITEM
 from foodgram.permissions import IsAuthorOrReadOnly
 
 
@@ -69,42 +68,30 @@ class RecipeViewSet(ModelViewSet):
         return RecipePostSerializer
 
     @staticmethod
-    def create_favorite_or_cart_object(serializer, model, pk, request):
+    def create_favorite_or_cart_object(serializer, pk, request):
 
         data = {
             'recipe': pk,
-            'user': request.user.id
+            'consumer': request.user.id
         }
-        try:
-            recipe = Recipe.objects.get(id=pk)
-        except Recipe.DoesNotExist:
-            return Response(NO_RECIPE,
-                            status=status.HTTP_400_BAD_REQUEST)
 
-        # без try/except не получается отдать 400 ошибку вместо 404.
-        # Если объект не получать в сериализаторе, как ты говорил, то
-        # его придется получать здесь
+        serializer = serializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
 
-        serializer = serializer(data, context={'recipe': recipe})
-        serializer.validate(data)
-
-        model.objects.create(consumer=request.user,
-                             recipe=recipe)
-
-        return Response(serializer.to_representation(data),
+        return Response(serializer.data,
                         status=status.HTTP_201_CREATED)
 
     @staticmethod
     def delete_favorite_or_cart_object(model, pk, request):
 
-        get_object_or_404(Recipe, pk=pk)
         obj = model.objects.filter(consumer=request.user,
                                    recipe=pk)
-        if not obj.exists():
-            return Response(NONEXISTENT_CART_FAV_ITEM,
-                            status=status.HTTP_400_BAD_REQUEST)
-        obj.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        if obj.exists():
+            obj.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(NONEXISTENT_CART_FAV_ITEM,
+                        status=status.HTTP_400_BAD_REQUEST)
 
     @staticmethod
     def create_pdf(queryset):
@@ -141,10 +128,11 @@ class RecipeViewSet(ModelViewSet):
             url_path='favorite',
             permission_classes=(IsAuthenticated,))
     def favorite(self, request, pk):
-        return self.create_favorite_or_cart_object(FavoritesSerializer,
-                                                   Favorites,
-                                                   pk,
-                                                   request)
+        return self.create_favorite_or_cart_object(
+            FavoritesSerializer,
+            pk,
+            request
+        )
 
     @favorite.mapping.delete
     def delete_favorite(self, request, pk):
@@ -155,10 +143,11 @@ class RecipeViewSet(ModelViewSet):
             url_path='shopping_cart',
             permission_classes=(IsAuthenticated,))
     def shopping_cart(self, request, pk):
-        return self.create_favorite_or_cart_object(ShoppingCartSerializer,
-                                                   ShoppingCart,
-                                                   pk,
-                                                   request)
+        return self.create_favorite_or_cart_object(
+            ShoppingCartSerializer,
+            pk,
+            request
+        )
 
     @shopping_cart.mapping.delete
     def delete_cart(self, request, pk):
@@ -168,12 +157,13 @@ class RecipeViewSet(ModelViewSet):
             url_path='download_shopping_cart',
             permission_classes=(IsAuthenticated,))
     def download_shopping_cart(self, request):
-        ingredients = (RecipeIngredient.objects.filter(
+        ingredients = RecipeIngredient.objects.filter(
             recipe__cart_items__consumer=request.user
-        ).values('ingredient_id')
-         .annotate(amount=Sum('amount'))
-         .order_by('recipe__name'))
-        print(ingredients)
+        ).values(
+            'ingredient_id'
+        ).annotate(
+            amount=Sum('amount')
+        ).order_by('recipe__name')
 
         return FileResponse(self.create_pdf(ingredients),
                             as_attachment=True,

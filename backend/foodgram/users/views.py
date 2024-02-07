@@ -1,4 +1,3 @@
-from django.shortcuts import get_object_or_404
 from djoser.views import UserViewSet
 from rest_framework import status
 from rest_framework.decorators import action
@@ -6,8 +5,11 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from .models import User
-from recipes.serializers import SubscriptionSerializer
-from recipes.models import Subscription
+from foodgram.constants import NONEXISTENT_SUB
+from recipes.serializers import (
+    SubscriptionPostSerializer,
+    SubscriptionGetSerializer
+)
 
 
 class SubscriptionViewSet(UserViewSet):
@@ -17,26 +19,30 @@ class SubscriptionViewSet(UserViewSet):
             permission_classes=(IsAuthenticated,),
             url_path='subscribe',)
     def subscribe(self, request, id):
-        user = get_object_or_404(User, id=id)
 
-        serializer = SubscriptionSerializer(user)
+        data = {
+            'subscriber': request.user.id,
+            'author': id
+        }
+
+        serializer = SubscriptionPostSerializer(data=data)
         serializer.context['request'] = request
-        serializer.context['user'] = user
-        serializer.validate()
-        Subscription.objects.create(subscriber=request.user,
-                                    author=user)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
         return Response(serializer.data,
                         status=status.HTTP_201_CREATED)
 
     @subscribe.mapping.delete
     def delete_sub(self, request, id):
-        author = get_object_or_404(User, id=id)
+
         subscription = request.user.subs_subscriber.filter(
-            author=author
+            author=id
         )
-        SubscriptionSerializer().validate_deletion(subscription)
-        subscription.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        if subscription.exists():
+            subscription.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(NONEXISTENT_SUB, status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=False,
             methods=('get',),
@@ -44,7 +50,7 @@ class SubscriptionViewSet(UserViewSet):
     def subscriptions(self, request):
         return (
             self.get_paginated_response(
-                SubscriptionSerializer(
+                SubscriptionGetSerializer(
                     self.paginate_queryset(
                         User.objects.filter(
                             subs_author__subscriber=self.request.user.id
@@ -58,5 +64,5 @@ class SubscriptionViewSet(UserViewSet):
 
     def get_permissions(self):
         if self.action == 'me':
-            self.permission_classes = (IsAuthenticated,)
+            return IsAuthenticated()
         return super().get_permissions()
