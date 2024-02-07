@@ -140,7 +140,7 @@ class RecipePostSerializer(serializers.ModelSerializer):
         if not data.get('tags'):
             raise serializers.ValidationError(NO_TAGS_TEXT)
 
-        ingredients_ids = [ing['ingredient__id'] for ing in ingredients]
+        ingredients_ids = [ing['id'] for ing in ingredients]
         if len(ingredients_ids) != len(set(ingredients_ids)):
             raise serializers.ValidationError(INGREDIENTS_DUPLICATE)
 
@@ -173,7 +173,7 @@ class RecipePostSerializer(serializers.ModelSerializer):
             all_ingredients.append(
                 RecipeIngredient(
                     recipe=recipe,
-                    ingredient=ingredient.get('ingredient__id'),
+                    ingredient=ingredient.get('id'),
                     amount=ingredient.get('amount')
                 )
             )

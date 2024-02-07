@@ -3,6 +3,7 @@ import io
 from django.db.models import Sum
 from django.http import FileResponse
 from django_filters.rest_framework import DjangoFilterBackend
+from djoser.views import UserViewSet
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter
@@ -28,9 +29,12 @@ from .serializers import (IngredientSerializer,
                           RecipePostSerializer,
                           RecipeGetSerializer,
                           FavoritesSerializer,
-                          ShoppingCartSerializer)
-from foodgram.constants import NONEXISTENT_CART_FAV_ITEM
+                          ShoppingCartSerializer,
+                          SubscriptionPostSerializer,
+                          SubscriptionGetSerializer)
+from foodgram.constants import NONEXISTENT_CART_FAV_ITEM, NONEXISTENT_SUB
 from foodgram.permissions import IsAuthorOrReadOnly
+from users.models import User
 
 
 class TagIngredientViewBase(ReadOnlyModelViewSet):
@@ -168,3 +172,59 @@ class RecipeViewSet(ModelViewSet):
         return FileResponse(self.create_pdf(ingredients),
                             as_attachment=True,
                             filename='список_покупок.pdf')
+
+
+class SubscriptionViewSet(UserViewSet):
+
+    @action(detail=True,
+            methods=('post',),
+            permission_classes=(IsAuthenticated,),
+            url_path='subscribe',)
+    def subscribe(self, request, id):
+
+        data = {
+            'subscriber': request.user.id,
+            'author': id
+        }
+
+        serializer = SubscriptionPostSerializer(data=data)
+        serializer.context['request'] = request
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return Response(serializer.data,
+                        status=status.HTTP_201_CREATED)
+
+    @subscribe.mapping.delete
+    def delete_sub(self, request, id):
+
+        subscription = request.user.subs_subscriber.filter(
+            author=id
+        )
+        if subscription.exists():
+            subscription.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(NONEXISTENT_SUB, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=False,
+            methods=('get',),
+            url_path='subscriptions')
+    def subscriptions(self, request):
+        return (
+            self.get_paginated_response(
+                SubscriptionGetSerializer(
+                    self.paginate_queryset(
+                        User.objects.filter(
+                            subs_author__subscriber=self.request.user.id
+                        )
+                    ),
+                    many=True,
+                    context={'request': request}
+                ).data
+            )
+        )
+
+    def get_permissions(self):
+        if self.action == 'me':
+            return IsAuthenticated()
+        return super().get_permissions()

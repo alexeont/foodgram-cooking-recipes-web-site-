@@ -51,7 +51,7 @@ class CartFavoritesModel(models.Model):
         constraints = (
             models.UniqueConstraint(
                 fields=('consumer', 'recipe'),
-                name= '%(class)s prevent double add'
+                name='%(class)s prevent double add'
             ),
         )
 
