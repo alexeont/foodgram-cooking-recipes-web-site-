@@ -13,7 +13,6 @@ from foodgram.constants import (
     MIN_AMOUNT_ERROR_TEXT,
     MAX_AMOUNT_FOR_INGREDIENT,
     MAX_AMOUNT_ERROR_TEXT,
-    MAX_MEASURE_UNIT,
     COLOR_SYMBOLS_COUNT,
 )
 from users.models import User
@@ -84,7 +83,7 @@ class Ingredient(NameModel):
     """ Ингредиент. """
 
     measurement_unit = models.CharField('Мера измерения',
-                                        max_length=MAX_MEASURE_UNIT)
+                                        max_length=MAX_NAME_FIELD)
 
     class Meta:
         verbose_name = 'ингредиент'

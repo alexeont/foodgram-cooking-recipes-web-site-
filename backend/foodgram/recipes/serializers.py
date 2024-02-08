@@ -6,19 +6,15 @@ from .models import (Favorites,
                      Recipe,
                      Ingredient,
                      RecipeIngredient,
-                     ShoppingCart,
-                     Subscription)
+                     ShoppingCart)
 from foodgram.constants import (MAX_AMOUNT_FOR_INGREDIENT,
                                 MIN_AMOUNT_FOR_INGREDIENT,
                                 NO_INGREDIENTS_TEXT,
                                 NO_TAGS_TEXT,
                                 TAGS_DUPLICATE,
                                 INGREDIENTS_DUPLICATE,
-                                DOUBLE_SUB,
-                                SELF_SUB,
                                 MAX_COOKING_TIME,
                                 MIN_COOKING_TIME)
-from users.models import User
 from users.serializers import UserSerializer
 
 
@@ -168,16 +164,14 @@ class RecipePostSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def create_update_ingredients(recipe, ingredients):
-        all_ingredients = []
-        for ingredient in ingredients:
-            all_ingredients.append(
-                RecipeIngredient(
-                    recipe=recipe,
-                    ingredient=ingredient.get('id'),
-                    amount=ingredient.get('amount')
-                )
-            )
-        RecipeIngredient.objects.bulk_create(all_ingredients)
+        ingredients_data = [
+            RecipeIngredient(
+                recipe=recipe,
+                ingredient=ingredient['id'],
+                amount=ingredient['amount']
+            ) for ingredient in ingredients
+        ]
+        RecipeIngredient.objects.bulk_create(ingredients_data)
 
     def to_representation(self, instance):
         return RecipeGetSerializer(
@@ -192,57 +186,6 @@ class RecipeShortSerializer(RecipeGetSerializer):
         model = Recipe
         fields = ('id', 'name', 'image', 'cooking_time')
         read_only_fields = ('__all__',)
-
-
-""" Подписки. """
-
-
-class SubscriptionGetSerializer(UserSerializer):
-
-    recipes = serializers.SerializerMethodField()
-    recipes_count = serializers.ReadOnlyField(source='recipes.count')
-
-    class Meta():
-        model = User
-        fields = ('email', 'id', 'username', 'first_name',
-                  'last_name', 'is_subscribed', 'recipes', 'recipes_count')
-        read_only_fields = ('__all__',)
-
-    def get_recipes(self, obj):
-        recipes = obj.recipes.all()
-        recipes_limit = (self.context['request']
-                         .query_params.get('recipes_limit'))
-        if recipes_limit:
-            try:
-                recipes_limit = int(recipes_limit)
-                recipes = recipes[:recipes_limit]
-            except TypeError:
-                pass
-        return RecipeShortSerializer(recipes, many=True).data
-
-
-class SubscriptionPostSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = Subscription
-        fields = '__all__'
-        read_only_fields = ('__all__',)
-
-    def validate(self, data):
-        author = data['author']
-
-        if author == self.context['request'].user.id:
-            raise serializers.ValidationError(SELF_SUB)
-        if Subscription.objects.filter(
-            author=author,
-            subscriber=data['subscriber']
-        ).exists():
-            raise serializers.ValidationError(DOUBLE_SUB)
-        return data
-
-    def to_representation(self, instance):
-        return (SubscriptionGetSerializer(context=self.context)
-                .to_representation(instance.author))
 
 
 """ Валидация корзины и избранного. """

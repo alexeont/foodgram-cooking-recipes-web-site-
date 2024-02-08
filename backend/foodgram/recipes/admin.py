@@ -23,13 +23,13 @@ class RecipeAdmin(admin.ModelAdmin):
                     'name',
                     'author',
                     'favorited_count',
-                    'ingredient_string')
+                    'ingredients_display')
     search_fields = ('name', 'author', 'tags')
     readonly_fields = ('author', 'favorited_count')
     inlines = (IngredientInline,)
 
     @admin.display(description='ингредиенты')
-    def ingredient_string(self, obj):
+    def ingredients_display(self, obj):
         return ', '.join([i.name for i in obj.ingredients.all()])
 
     @admin.display(description='Добавлен пользовалями в избранное')

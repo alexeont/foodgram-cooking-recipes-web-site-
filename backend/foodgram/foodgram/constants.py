@@ -2,7 +2,6 @@
 MAX_NAME_FIELD = 200
 TRUNCATED_MODEL_NAME = 10
 COLOR_SYMBOLS_COUNT = 7
-MAX_MEASURE_UNIT = 100
 
 MIN_COOKING_TIME = 1
 MIN_COOKING_TIME_MSG = 'Время приготовления не может равняться нулю'
@@ -12,7 +11,7 @@ MAX_COOKING_TIME_MSG = 'Больше суток готовится только 
 MIN_AMOUNT_FOR_INGREDIENT = 1
 MIN_AMOUNT_ERROR_TEXT = 'Количество для ингредиента не может быть меньше 1'
 MAX_AMOUNT_FOR_INGREDIENT = 32767
-MAX_AMOUNT_ERROR_TEXT = 'Количество для ингредиента не может быть больше 10000'
+MAX_AMOUNT_ERROR_TEXT = 'Количество для ингредиента не может быть больше 32767'
 
 INVALID_COLOR_FIELD_ERROR_TEXT = 'Цвет не соответствует hex-формату'
 
