@@ -54,9 +54,7 @@ class IngredientViewSet(TagIngredientViewBase):
 
 class RecipeViewSet(ModelViewSet):
     serializer_class = RecipePostSerializer
-    queryset = (Recipe.objects.all()
-                .select_related('author')
-                .prefetch_related('tags', 'ingredients'))
+    queryset = Recipe.objects.all()
     http_method_names = ('get', 'post', 'patch', 'delete')
     permission_classes = (IsAuthorOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
