@@ -26,14 +26,6 @@ class IngredientSerializer(serializers.ModelSerializer):
         model = Ingredient
 
 
-class CustomImageField(Base64ImageField):
-
-    def to_internal_value(self, base64_data):
-        if base64_data in self.EMPTY_VALUES:
-            self.fail('empty')
-        return super().to_internal_value(base64_data)
-
-
 class RecipeIngredientSerializer(serializers.ModelSerializer):
     """ Для создания ингредиента в рецепте. """
 
@@ -78,7 +70,6 @@ class RecipeGetSerializer(serializers.ModelSerializer):
     tags = TagSerializer(many=True)
     ingredients = RecipeIngredientGetSerializer(many=True,
                                                 source='recipeingredient')
-    image = serializers.ImageField(source='image.url')
     author = UserSerializer()
     is_favorited = serializers.SerializerMethodField()
     is_in_shopping_cart = serializers.SerializerMethodField()
@@ -113,7 +104,8 @@ class RecipePostSerializer(serializers.ModelSerializer):
     tags = serializers.PrimaryKeyRelatedField(many=True,
                                               queryset=Tag.objects.all())
     author = UserSerializer(default=serializers.CurrentUserDefault())
-    image = CustomImageField()
+    image = Base64ImageField(allow_null=False,
+                             allow_empty_file=False)
     cooking_time = serializers.IntegerField(min_value=MIN_COOKING_TIME,
                                             max_value=MAX_COOKING_TIME)
 
