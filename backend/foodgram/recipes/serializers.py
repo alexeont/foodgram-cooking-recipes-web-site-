@@ -85,7 +85,7 @@ class RecipeGetSerializer(serializers.ModelSerializer):
     ingredients = RecipeIngredientGetSerializer(many=True,
                                                 source='recipeingredient')
     author = UserSerializer()
-    # image = Base64ImageField()
+    image = serializers.CharField(source='image.url')
     is_favorited = serializers.SerializerMethodField()
     is_in_shopping_cart = serializers.SerializerMethodField()
 
