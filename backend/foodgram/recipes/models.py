@@ -10,9 +10,8 @@ from foodgram.constants import (
     MAX_COOKING_TIME,
     MAX_COOKING_TIME_MSG,
     MIN_AMOUNT_FOR_INGREDIENT,
-    MIN_AMOUNT_ERROR_TEXT,
     MAX_AMOUNT_FOR_INGREDIENT,
-    MAX_AMOUNT_ERROR_TEXT,
+    AMOUNT_ERROR_TEXT,
     COLOR_SYMBOLS_COUNT,
 )
 from users.models import User
@@ -205,11 +204,11 @@ class RecipeIngredient(models.Model):
         validators=(
             MinValueValidator(
                 MIN_AMOUNT_FOR_INGREDIENT,
-                message=MIN_AMOUNT_ERROR_TEXT
+                message=AMOUNT_ERROR_TEXT
             ),
             MaxValueValidator(
                 MAX_AMOUNT_FOR_INGREDIENT,
-                message=MAX_AMOUNT_ERROR_TEXT
+                message=AMOUNT_ERROR_TEXT
             )
         )
     )

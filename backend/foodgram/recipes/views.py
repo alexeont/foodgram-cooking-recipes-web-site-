@@ -102,7 +102,7 @@ class RecipeViewSet(ModelViewSet):
         for item in queryset:
             name = item['ingredient__name'].capitalize()
             measure = item['ingredient__measurement_unit']
-            to_buy_list += model_str.format(name, measure, item['amount'])
+            to_buy_list += model_str.format(name, measure, item['sum_amount'])
 
         buffer = io.BytesIO()
         file = canvas.Canvas(buffer)
@@ -162,8 +162,10 @@ class RecipeViewSet(ModelViewSet):
             'ingredient__name',
             'ingredient__measurement_unit'
         ).annotate(
-            amount=Sum('amount')
-        ).order_by('recipe__name')
+            sum_amount=Sum('amount')
+        ).order_by('ingredient__name')
+
+        print(ingredients)
 
         return FileResponse(self.create_pdf(ingredients),
                             as_attachment=True,

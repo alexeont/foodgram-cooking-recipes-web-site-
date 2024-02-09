@@ -9,9 +9,8 @@ MAX_COOKING_TIME = 32767
 MAX_COOKING_TIME_MSG = 'Больше суток готовится только дипломный проект'
 
 MIN_AMOUNT_FOR_INGREDIENT = 1
-MIN_AMOUNT_ERROR_TEXT = 'Количество для ингредиента не может быть меньше 1'
+AMOUNT_ERROR_TEXT = 'Введите корректное количество для ингредиента'
 MAX_AMOUNT_FOR_INGREDIENT = 32767
-MAX_AMOUNT_ERROR_TEXT = 'Количество для ингредиента не может быть больше 32767'
 
 INVALID_COLOR_FIELD_ERROR_TEXT = 'Цвет не соответствует hex-формату'
 
