@@ -5,7 +5,7 @@ from rest_framework import routers
 from .views import SubscriptionViewSet
 
 
-router = routers.SimpleRouter()
+router = routers.DefaultRouter()
 router.register(r'users', SubscriptionViewSet, basename='users')
 
 urlpatterns = [

@@ -7,7 +7,7 @@ from .views import (
     RecipeViewSet
 )
 
-router = routers.SimpleRouter()
+router = routers.DefaultRouter()
 
 router.register(r'tags', TagViewSet, basename='tags')
 router.register(r'ingredients', IngredientViewSet, basename='ingredients')
