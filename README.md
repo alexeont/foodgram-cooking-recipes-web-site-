@@ -1,5 +1,3 @@
-![image](https://github.com/alexeont/foodgram-project-react/assets/142803549/c8408dc5-7330-44c1-8c59-ba776932cb8f)![workflow](https://github.com/alexeont/foodgram-project-react/actions/workflows/main.yml/badge.svg?event=push)
-
 ##  Описание проекта Foodgram:
 
 Сайт кулинарных рецептов. Неавторизованным пользователям доступен просмотр выложенных рецептов. Для публикации своего, добавления в избранное и список покупок, подписки на автора -- необходима регистрация.
@@ -19,7 +17,7 @@
 Клонировать репозиторий и перейти в него в командной строке:
 
 ```
-git clone https://github.com/alexeont/foodgram-project-react
+git clone https://github.com/alexeont/Foodgram
 cd foodgram-project-react
 ```
 
